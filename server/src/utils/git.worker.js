@@ -4,7 +4,10 @@ import { Worker } from "bullmq";
 import User from "../schema/user.schema.js";
 import ActiveRepo from "../schema/activeRepo.js";
 import { decrypt } from "../controllers/oauthcontroller.js";
-import { generateReadme } from "../services/groq.service.js";
+import {
+  generateReadme,
+  analyzeReadmeDepth,
+} from "../services/groq.service.js";
 import {
   getCommit,
   getRepoTree,
@@ -143,7 +146,6 @@ const aihandler = async (data) => {
     const readmeFileName = process.env.README_FILE_NAME || "README.md";
     let existingReadme = null;
     let existingReadmeSha = null;
-    let isReadmeGood = false;
 
     try {
       const readmeData = await getFileContent(
@@ -157,12 +159,8 @@ const aihandler = async (data) => {
       if (readmeData) {
         existingReadme = readmeData.content;
         existingReadmeSha = readmeData.sha;
-        
-        // Check if README is substantial and well-formed
-        isReadmeGood = isReadmeSubstantial(existingReadme);
-        
         console.log(
-          `[AI Handler] Found existing README (${readmeData.size} bytes) - Quality: ${isReadmeGood ? 'GOOD' : 'POOR'}`
+          `[AI Handler] Found existing README (${readmeData.size} bytes)`
         );
       }
     } catch (error) {
@@ -171,22 +169,39 @@ const aihandler = async (data) => {
       );
     }
 
-    // Step 6: Fetch files based on README quality
+    // Step 6: Analyze README depth to determine strategy
+    const readmeAnalysis = analyzeReadmeDepth(existingReadme);
+    console.log(`[AI Handler] README Analysis:`, {
+      strategy: readmeAnalysis.strategy,
+      reason: readmeAnalysis.reason,
+      depthScore: readmeAnalysis.depthScore,
+      needsFullCodebase: readmeAnalysis.needsFullCodebase,
+    });
+
+    // Step 7: Fetch files based on analysis strategy
     let changedFilesContent = [];
-    
-    if (!isReadmeGood) {
+    let fullCodebase = [];
+
+    if (readmeAnalysis.needsFullCodebase) {
       // README doesn't exist or is poor quality - scan entire repo
-      console.log(`[AI Handler] README is missing/poor - scanning entire repository`);
-      
+      console.log(
+        `[AI Handler] Strategy: ${readmeAnalysis.strategy.toUpperCase()} - scanning entire repository`
+      );
+
       try {
-        const treeData = await getRepoTree(accessToken, repoOwner, repoName, defaultBranch);
-        
+        const treeData = await getRepoTree(
+          accessToken,
+          repoOwner,
+          repoName,
+          defaultBranch
+        );
+
         // Get important files from the repo
         const importantFiles = getImportantFiles(treeData.tree);
-        
-        // Fetch content of important files (limit to 20 for full scan)
-        const filesToFetch = importantFiles.slice(0, 20);
-        
+
+        // Fetch content of important files (limit to 25 for full scan)
+        const filesToFetch = importantFiles.slice(0, 25);
+
         for (const filePath of filesToFetch) {
           try {
             const fileData = await getFileContent(
@@ -198,26 +213,68 @@ const aihandler = async (data) => {
             );
 
             if (fileData) {
-              changedFilesContent.push({
+              fullCodebase.push({
                 path: filePath,
-                content: truncateContent(fileData.content, 150),
+                content: truncateContent(fileData.content, 200), // More content for full analysis
                 language: getFileLanguage(filePath),
-                status: "scanned",
               });
             }
           } catch (error) {
-            console.warn(`[AI Handler] Could not fetch file ${filePath}: ${error.message}`);
+            console.warn(
+              `[AI Handler] Could not fetch file ${filePath}: ${error.message}`
+            );
           }
         }
-        
-        console.log(`[AI Handler] Scanned ${changedFilesContent.length} important files from repository`);
+
+        console.log(
+          `[AI Handler] Scanned ${fullCodebase.length} important files from repository`
+        );
       } catch (error) {
-        console.error(`[AI Handler] Error scanning repository: ${error.message}`);
+        console.error(
+          `[AI Handler] Error scanning repository: ${error.message}`
+        );
+      }
+
+      // Also fetch changed files for context
+      const relevantFiles = commitData.files.filter(
+        (file) =>
+          shouldIncludeFile(file.filename) &&
+          (file.status === "added" || file.status === "modified")
+      );
+
+      for (const file of relevantFiles.slice(0, 10)) {
+        try {
+          // Skip if already in fullCodebase
+          if (fullCodebase.some((f) => f.path === file.filename)) continue;
+
+          const fileData = await getFileContent(
+            accessToken,
+            repoOwner,
+            repoName,
+            file.filename,
+            defaultBranch
+          );
+
+          if (fileData) {
+            changedFilesContent.push({
+              path: file.filename,
+              content: truncateContent(fileData.content, 150),
+              language: getFileLanguage(file.filename),
+              status: file.status,
+            });
+          }
+        } catch (error) {
+          console.warn(
+            `[AI Handler] Could not fetch changed file ${file.filename}: ${error.message}`
+          );
+        }
       }
     } else {
-      // README exists and is good - only fetch changed files
-      console.log(`[AI Handler] README is good - fetching only changed files`);
-      
+      // README is comprehensive - only fetch changed files (incremental update)
+      console.log(
+        `[AI Handler] Strategy: INCREMENTAL - fetching only changed files`
+      );
+
       const relevantFiles = commitData.files.filter(
         (file) =>
           shouldIncludeFile(file.filename) &&
@@ -257,7 +314,7 @@ const aihandler = async (data) => {
       );
     }
 
-    // Step 7: Build context for Groq API
+    // Step 8: Build context for Groq API
     console.log(`[AI Handler] Building context for README generation`);
     let context = buildReadmeContext({
       repoName,
@@ -266,6 +323,7 @@ const aihandler = async (data) => {
       existingReadme,
       commitData,
       changedFilesContent,
+      fullCodebase: readmeAnalysis.needsFullCodebase ? fullCodebase : undefined,
     });
 
     // Validate and optimize context
@@ -346,7 +404,7 @@ const aihandler = async (data) => {
     // Log error but don't throw - let BullMQ handle retries
     throw error;
   }
-}
+};
 
 /**
  * Check if README is substantial and well-formed
@@ -403,7 +461,7 @@ function isReadmeSubstantial(readme) {
 
   // Check for code blocks or examples (indicates detailed documentation)
   const hasCodeBlocks = /```[\s\S]*?```/.test(readme);
-  
+
   // If it has code blocks and reasonable length, it's probably good
   if (hasCodeBlocks && readme.length > 300) {
     return true;
@@ -433,7 +491,7 @@ function getImportantFiles(tree) {
     "pom.xml": 1,
     "build.gradle": 1,
     "composer.json": 1,
-    
+
     // Main entry points
     "index.js": 2,
     "index.ts": 2,
@@ -444,12 +502,12 @@ function getImportantFiles(tree) {
     "app.ts": 2,
     "server.js": 2,
     "server.ts": 2,
-    
+
     // Config files
     ".env.example": 3,
     "config.js": 3,
     "config.json": 3,
-    
+
     // Documentation
     "CHANGELOG.md": 4,
     "CONTRIBUTING.md": 4,
@@ -476,7 +534,7 @@ function getImportantFiles(tree) {
     .map((item) => {
       const filename = item.path.split("/").pop();
       const priority = priorities[filename] || 999;
-      
+
       // Check if it matches important directory patterns
       const matchesPattern = importantDirPatterns.some((pattern) =>
         pattern.test(item.path)
@@ -503,4 +561,4 @@ function getImportantFiles(tree) {
     });
 
   return categorized.map((item) => item.path);
-};
+}
