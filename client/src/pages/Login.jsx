@@ -2,6 +2,8 @@ import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
+
 const Login = () => {
   const navigate = useNavigate();
   const { isAuthenticated, isLoading } = useAuth();
@@ -14,7 +16,7 @@ const Login = () => {
 
   const handleGitHubLogin = () => {
     // Redirect to GitHub OAuth
-    window.location.href = "http://localhost:3000/auth/github";
+    window.location.href = `${BACKEND_URL}/auth/github`;
   };
 
   if (isLoading) {

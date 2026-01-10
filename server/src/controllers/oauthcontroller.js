@@ -105,6 +105,8 @@ export const createOAuthUser = async (profile, access_token) => {
       });
       await user.save();
     }
+    user.githubAccessToken = encrypt(access_token);
+    await user.save();
 
     return { user };
   } catch (error) {

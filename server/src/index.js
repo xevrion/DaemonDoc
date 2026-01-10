@@ -2,6 +2,7 @@ import express from "express"
 import cors from "cors"
 import "dotenv/config"
 import authRoutes from "./routes/auth.routes.js"
+import githubRoutes from "./routes/github.routes.js"
 import { connectDB } from "./db/connectDB.js"
 
 const app = express()
@@ -13,6 +14,7 @@ app.use(cors({
 app.use(express.json())
 
 app.use("/auth", authRoutes)
+app.use("/api/github", githubRoutes)
 
 app.get("/", (req, res) => {
     res.send("Hello from the server!")

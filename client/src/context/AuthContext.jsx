@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
 const AuthContext = createContext(null);
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
@@ -23,7 +24,7 @@ export const AuthProvider = ({ children }) => {
 
       if (token) {
         try {
-          const response = await fetch("http://localhost:3000/auth/verify", {
+          const response = await fetch(`${BACKEND_URL}/auth/verify`, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
@@ -53,7 +54,7 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (accessToken) => {
     try {
-      const response = await fetch("http://localhost:3000/auth/verify", {
+      const response = await fetch(`${BACKEND_URL}/auth/verify`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
