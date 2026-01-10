@@ -47,7 +47,13 @@ new Worker(
   "readme-generation",
   async (job) => {
     console.log("Processing job:", job.data);
+    aihandler(job.data);
     // README pipeline here
   },
   { connection }
 );
+
+
+const aihandler = async (data) => {
+    
+}
