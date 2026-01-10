@@ -1,6 +1,7 @@
 import User from "../schema/user.schema.js";
 import { decrypt } from "./oauthcontroller.js";
 import axios from "axios";
+import ActiveRepo from "../schema/activeRepo.js";
 
 export const getGithubRepos = async (req, res) => {
   try {
@@ -22,6 +23,8 @@ export const getGithubRepos = async (req, res) => {
         },
       }
     );
+    const activeRepos = await ActiveRepo.find({ userId: userId });
+    const activeRepoIds = activeRepos.map(repo => repo.repoId);
     const reposData = reposRes.data
     .filter(repo => !repo.fork && repo.permissions?.push)
     .map((repo) => ({
@@ -29,7 +32,9 @@ export const getGithubRepos = async (req, res) => {
       name: repo.name,
       full_name: repo.full_name,
       private: repo.private,
+      owner: repo.owner.login,
       default_branch: repo.default_branch,
+      activated :  activeRepoIds.includes(repo.id)
     }));
 
     res.status(200).json({reposData});

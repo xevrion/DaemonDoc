@@ -95,7 +95,7 @@ export const githubCallBack = async (req, res) => {
 
 export const createOAuthUser = async (profile, access_token) => {
   try {
-    let user = await User.findOne({ email: profile.email });
+    let user = await User.findOne({ githubUsername: profile.login });
     if (!user) {
       user = new User({
         githubId: profile.id,
