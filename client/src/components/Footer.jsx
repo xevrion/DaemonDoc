@@ -32,7 +32,7 @@ const Footer = () => {
 
           {/* GitHub Link */}
           <motion.a
-            href="https://github.com"
+            href="https://github.com/kaihere14/readit"
             target="_blank"
             rel="noopener noreferrer"
             whileHover={{ scale: 1.05, y: -2 }}
