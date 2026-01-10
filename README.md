@@ -107,12 +107,23 @@ The application uses the following scripts:
 * `dev`: Starts the server and client in development mode
 * `build`: Builds the client for production
 * `test`: Runs the tests (not implemented)
+* `start`: Starts the server in production mode
 
+The `build` script in the `server/package.json` has been updated for consistency:
+```json
+"scripts": {
+  "dev": "nodemon src/index.js",
+  "build": "echo \"No build step required\"",
+  "start": "node src/index.js",
+  "test": "echo \"Error: no test specified\" && exit 1"
+}
+```
 Example usage:
 ```bash
 npm run dev
 npm run build
 npm run test
+npm run start
 ```
 
 ## API Documentation
@@ -160,3 +171,9 @@ The application uses the following third-party libraries:
 * Redis
 * IORedis
 * BullMQ
+* Axios
+* Cors
+* Crypto
+* Dotenv
+* JsonWebToken
+* Nodemon
