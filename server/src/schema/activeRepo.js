@@ -9,7 +9,8 @@ const activeRepoSchema = new Schema({
     repoOwner: { type: String, required: true },
     defaultBranch: { type: String, required: true },
 
-
+    active : { type: Boolean, default: true },
+    lastProcessedSha: { type: String, default: null },
     
     webhookId: { type: Number, required: true },
     lastUpdated: { type: Date, default: Date.now },

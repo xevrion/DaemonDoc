@@ -47,7 +47,11 @@ const generateAccessToken = (userId) =>
 export const githubAuthRedirect = (req, res) => {
   const githubClientId = process.env.GITHUB_CLIENT_ID;
   const redirectUri = process.env.GITHUB_CALLBACK_URL;
-  const authUrl = `https://github.com/login/oauth/authorize?client_id=${githubClientId}&redirect_uri=${redirectUri}&scope=profile email`;
+  const authUrl =
+  `https://github.com/login/oauth/authorize` +
+  `?client_id=${githubClientId}` +
+  `&redirect_uri=${redirectUri}` +
+  `&scope=repo read:user user:email`;
   res.redirect(authUrl);
 };
 
