@@ -15,7 +15,11 @@ import {
   shouldIncludeFile,
   truncateContent,
 } from "../services/github.service.js";
-import { buildReadmeContext, optimizeContext, validateContext } from "./prompt.builder.js";
+import {
+  buildReadmeContext,
+  optimizeContext,
+  validateContext,
+} from "./prompt.builder.js";
 
 export const connection = new IORedis({
   host: process.env.REDIS_HOST || "localhost",
@@ -64,7 +68,7 @@ new Worker(
     console.log("Processing job:", job.data);
     await aihandler(job.data);
   },
-  { 
+  {
     connection,
     removeOnComplete: { count: 100 },
     removeOnFail: { count: 50 },
@@ -86,7 +90,9 @@ const aihandler = async (data) => {
     commitSha,
   } = data;
 
-  console.log(`[AI Handler] Starting README generation for ${repoFullName} at commit ${commitSha}`);
+  console.log(
+    `[AI Handler] Starting README generation for ${repoFullName} at commit ${commitSha}`
+  );
 
   try {
     // Step 1: Fetch user's GitHub token
@@ -98,20 +104,34 @@ const aihandler = async (data) => {
     const accessToken = decrypt(user.githubAccessToken);
 
     // Step 2: Get active repo record
-    const activeRepo = await ActiveRepo.findOne({ userId, repoId, active: true });
+    const activeRepo = await ActiveRepo.findOne({
+      userId,
+      repoId,
+      active: true,
+    });
     if (!activeRepo) {
       throw new Error("Active repository not found");
     }
 
     // Step 3: Fetch commit details
     console.log(`[AI Handler] Fetching commit details for ${commitSha}`);
-    const commitData = await getCommit(accessToken, repoOwner, repoName, commitSha);
+    const commitData = await getCommit(
+      accessToken,
+      repoOwner,
+      repoName,
+      commitSha
+    );
 
     // Step 4: Fetch repository structure
     console.log(`[AI Handler] Fetching repository structure`);
     let repoStructure = "";
     try {
-      const treeData = await getRepoTree(accessToken, repoOwner, repoName, defaultBranch);
+      const treeData = await getRepoTree(
+        accessToken,
+        repoOwner,
+        repoName,
+        defaultBranch
+      );
       repoStructure = formatRepoTree(treeData.tree, 3);
     } catch (error) {
       console.warn(`[AI Handler] Could not fetch repo tree: ${error.message}`);
@@ -132,22 +152,27 @@ const aihandler = async (data) => {
         readmeFileName,
         defaultBranch
       );
-      
+
       if (readmeData) {
         existingReadme = readmeData.content;
         existingReadmeSha = readmeData.sha;
-        console.log(`[AI Handler] Found existing README (${readmeData.size} bytes)`);
+        console.log(
+          `[AI Handler] Found existing README (${readmeData.size} bytes)`
+        );
       }
     } catch (error) {
-      console.log(`[AI Handler] No existing README found or error fetching: ${error.message}`);
+      console.log(
+        `[AI Handler] No existing README found or error fetching: ${error.message}`
+      );
     }
 
     // Step 6: Fetch changed files content (only relevant files)
     console.log(`[AI Handler] Fetching changed files content`);
     const changedFilesContent = [];
-    const relevantFiles = commitData.files.filter((file) => 
-      shouldIncludeFile(file.filename) && 
-      (file.status === "added" || file.status === "modified")
+    const relevantFiles = commitData.files.filter(
+      (file) =>
+        shouldIncludeFile(file.filename) &&
+        (file.status === "added" || file.status === "modified")
     );
 
     // Limit to first 10 files to avoid context overflow
@@ -172,11 +197,15 @@ const aihandler = async (data) => {
           });
         }
       } catch (error) {
-        console.warn(`[AI Handler] Could not fetch file ${file.filename}: ${error.message}`);
+        console.warn(
+          `[AI Handler] Could not fetch file ${file.filename}: ${error.message}`
+        );
       }
     }
 
-    console.log(`[AI Handler] Fetched ${changedFilesContent.length} changed files`);
+    console.log(
+      `[AI Handler] Fetched ${changedFilesContent.length} changed files`
+    );
 
     // Step 7: Build context for Gemini API
     console.log(`[AI Handler] Building context for README generation`);
@@ -203,24 +232,28 @@ const aihandler = async (data) => {
 
     // Optimize if needed
     if (validation.estimatedTokens > 8000) {
-      console.log(`[AI Handler] Optimizing context (${validation.estimatedTokens} tokens)`);
+      console.log(
+        `[AI Handler] Optimizing context (${validation.estimatedTokens} tokens)`
+      );
       context = optimizeContext(context, 8000);
     }
 
     // Step 8: Generate README using Gemini API
     console.log(`[AI Handler] Calling Gemini API to generate README`);
     const generatedReadme = await generateReadme(context);
-    
+
     if (!generatedReadme || generatedReadme.trim().length === 0) {
       throw new Error("Gemini API returned empty README");
     }
 
-    console.log(`[AI Handler] Generated README (${generatedReadme.length} characters)`);
+    console.log(
+      `[AI Handler] Generated README (${generatedReadme.length} characters)`
+    );
 
     // Step 9: Commit README back to repository
     console.log(`[AI Handler] Committing README to repository`);
     const commitMessage = "chore: auto-update README [skip ci]";
-    
+
     const commitResult = await commitFile(
       accessToken,
       repoOwner,
@@ -232,27 +265,35 @@ const aihandler = async (data) => {
       existingReadmeSha
     );
 
-    console.log(`[AI Handler] README committed successfully:`, commitResult.commit.sha);
+    console.log(
+      `[AI Handler] README committed successfully:`,
+      commitResult.commit.sha
+    );
 
     // Step 10: Update active repo metadata
     activeRepo.lastReadmeGeneratedAt = new Date();
-    activeRepo.readmeGenerationCount = (activeRepo.readmeGenerationCount || 0) + 1;
+    activeRepo.readmeGenerationCount =
+      (activeRepo.readmeGenerationCount || 0) + 1;
     activeRepo.lastReadmeSha = commitResult.commit.sha;
     await activeRepo.save();
 
-    console.log(`[AI Handler] ✓ README generation completed for ${repoFullName}`);
-    
+    console.log(
+      `[AI Handler] ✓ README generation completed for ${repoFullName}`
+    );
+
     return {
       success: true,
       commitSha: commitResult.commit.sha,
       readmeLength: generatedReadme.length,
     };
-
   } catch (error) {
-    console.error(`[AI Handler] ✗ Error generating README for ${repoFullName}:`, error.message);
+    console.error(
+      `[AI Handler] ✗ Error generating README for ${repoFullName}:`,
+      error.message
+    );
     console.error(error.stack);
-    
+
     // Log error but don't throw - let BullMQ handle retries
     throw error;
   }
-}
+};
