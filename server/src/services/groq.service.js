@@ -1,28 +1,184 @@
 import axios from "axios";
 
 const GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions";
-const GROQ_MODEL = process.env.GROQ_MODEL || "llama-3.3-70b-versatile";
+const GROQ_MODEL = process.env.GROQ_MODEL || "openai/gpt-oss-120b";
+const GROQ_MODEL_MINI = "llama-3.3-70b-versatile"; // Lightweight model for file selection
+const MAX_INPUT_TOKENS = 6000; // Keep buffer for safety
 
 /**
- * Generate README content using Groq API
+ * Estimate token count for a string (rough approximation)
+ * @param {string} text - Text to estimate
+ * @returns {number} Estimated token count
+ */
+function estimateTokens(text) {
+  if (!text) return 0;
+  // Rough estimation: ~4 characters per token
+  return Math.ceil(text.length / 4);
+}
+
+/**
+ * First API call: Ask AI which files are most important for README generation
+ * @param {Object} context - Repository context with file metadata
+ * @param {string} apiKey - API key to use
+ * @returns {Promise<Object>} AI's recommendation on which files to include
+ */
+async function getFileRecommendations(context, apiKey) {
+  const {
+    repoName,
+    repoOwner,
+    repoStructure,
+    fullCodebase,
+    changedFiles,
+    existingReadme,
+  } = context;
+
+  // Build file metadata (names, paths, sizes - NOT content)
+  const fileMetadata = [];
+
+  if (fullCodebase && fullCodebase.length > 0) {
+    fullCodebase.forEach((file) => {
+      fileMetadata.push({
+        path: file.path,
+        estimatedTokens: estimateTokens(file.content),
+        description: file.description || null,
+      });
+    });
+  }
+
+  if (changedFiles && changedFiles.length > 0) {
+    changedFiles.forEach((file) => {
+      if (!fileMetadata.some((f) => f.path === file.path)) {
+        fileMetadata.push({
+          path: file.path,
+          estimatedTokens: estimateTokens(file.content),
+          isChanged: true,
+        });
+      }
+    });
+  }
+
+  const totalEstimatedTokens = fileMetadata.reduce(
+    (sum, f) => sum + f.estimatedTokens,
+    0
+  );
+  const hasExistingReadme = !!existingReadme;
+  const existingReadmeTokens = estimateTokens(existingReadme);
+
+  const analysisPrompt = `You are helping decide which files to include for README generation.
+
+## Repository: ${repoOwner}/${repoName}
+
+## Repository Structure:
+\`\`\`
+${repoStructure}
+\`\`\`
+
+## Available Files with Token Estimates:
+${JSON.stringify(fileMetadata, null, 2)}
+
+## Context:
+- Total estimated tokens if all files included: ${totalEstimatedTokens}
+- Has existing README: ${hasExistingReadme} (${existingReadmeTokens} tokens)
+- Maximum allowed input tokens: ${MAX_INPUT_TOKENS}
+- Reserve ~1500 tokens for system prompt and instructions
+
+## Task:
+Select the MOST IMPORTANT files for generating a comprehensive README. Prioritize:
+1. Main entry points (index.js, main.py, app.js, etc.)
+2. Package.json, requirements.txt, Cargo.toml (dependencies/project info)
+3. Config files that show how to set up the project
+4. Key API/route files that show functionality
+5. Recently changed files (marked isChanged: true)
+
+Respond with ONLY a JSON object (no markdown, no explanation):
+{
+  "selectedFiles": ["path/to/file1", "path/to/file2"],
+  "includeExistingReadme": true/false,
+  "truncateReadme": true/false,
+  "reasoning": "brief explanation"
+}`;
+
+  const response = await axios.post(
+    GROQ_API_URL,
+    {
+      model: GROQ_MODEL_MINI,
+      messages: [
+        {
+          role: "user",
+          content: analysisPrompt,
+        },
+      ],
+      temperature: 0.2,
+      max_tokens: 500,
+    },
+    {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${apiKey}`,
+      },
+      timeout: 30000,
+    }
+  );
+
+  const content = response.data?.choices?.[0]?.message?.content;
+  if (!content) {
+    throw new Error("Invalid response from file analysis");
+  }
+
+  // Parse JSON response
+  try {
+    // Clean up response - remove markdown code blocks if present
+    const cleanContent = content
+      .replaceAll(/```json\n?/g, "")
+      .replaceAll(/```\n?/g, "")
+      .trim();
+    return JSON.parse(cleanContent);
+  } catch (parseError) {
+    console.error(
+      "Failed to parse AI recommendation:",
+      content,
+      parseError.message
+    );
+    // Fallback: include most important files by convention
+    const sortedFiles = [...fileMetadata].sort((a, b) => {
+      const priority = (f) => {
+        if (f.path.includes("package.json")) return 0;
+        if (
+          f.path.includes("index.") ||
+          f.path.includes("main.") ||
+          f.path.includes("app.")
+        )
+          return 1;
+        if (f.isChanged) return 2;
+        return 3;
+      };
+      return priority(a) - priority(b);
+    });
+    return {
+      selectedFiles: sortedFiles.slice(0, 5).map((f) => f.path),
+      includeExistingReadme: true,
+      truncateReadme: existingReadmeTokens > 1000,
+      reasoning: "Fallback selection based on file naming conventions",
+    };
+  }
+}
+
+/**
+ * Generate README content using Groq API with two-step approach
  * @param {Object} context - Context object containing repository information
- * @param {string} context.repoName - Repository name
- * @param {string} context.repoOwner - Repository owner
- * @param {string} context.repoStructure - Repository file structure
- * @param {string} context.existingReadme - Existing README content (if any)
- * @param {string} context.commitDiff - Recent commit changes
- * @param {Array} context.changedFiles - Array of changed files with content
- * @param {Array} context.fullCodebase - Array of all source files for full analysis (used when README is missing or shallow)
  * @returns {Promise<string>} Generated README content
  */
 export async function generateReadme(context) {
   // Fallback API keys
   const apiKeys = [
-    process.env.GROQ_API_KEY1,process.env.GROQ_API_KEY2,process.env.GROQ_API_KEY3
-  ];
+    process.env.GROQ_API_KEY1,
+    process.env.GROQ_API_KEY2,
+    process.env.GROQ_API_KEY3,
+  ].filter(Boolean);
 
-  const systemPrompt = buildSystemPrompt();
-  const userPrompt = buildUserPrompt(context);
+  if (apiKeys.length === 0) {
+    throw new Error("No GROQ API keys configured");
+  }
 
   let lastError = null;
 
@@ -32,6 +188,21 @@ export async function generateReadme(context) {
 
     try {
       console.log(`Attempting request with API key ${i + 1}/${apiKeys.length}`);
+
+      // STEP 1: Get AI recommendations on which files to include
+      console.log(
+        "Step 1: Analyzing files to determine optimal content selection..."
+      );
+      const recommendations = await getFileRecommendations(context, apiKey);
+      console.log("AI Recommendations:", recommendations.reasoning);
+
+      // STEP 2: Build optimized context based on recommendations
+      const optimizedContext = buildOptimizedContext(context, recommendations);
+
+      // STEP 3: Generate README with optimized context
+      console.log("Step 2: Generating README with selected files...");
+      const systemPrompt = buildSystemPrompt();
+      const userPrompt = buildUserPrompt(optimizedContext, recommendations);
 
       const response = await axios.post(
         GROQ_API_URL,
@@ -48,14 +219,14 @@ export async function generateReadme(context) {
             },
           ],
           temperature: 0.4,
-          max_tokens: 8000,
+          max_tokens: 4000,
         },
         {
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${apiKey}`,
           },
-          timeout: 60000, // 60 second timeout
+          timeout: 60000,
         }
       );
 
@@ -69,33 +240,29 @@ export async function generateReadme(context) {
       lastError = error;
 
       if (error.response) {
-        // Groq API error
         console.error(`Groq API Error with key ${i + 1}:`, {
           status: error.response.status,
           data: error.response.data,
         });
 
-        // If it's a rate limit or auth error, try next key
-        if (error.response.status === 429 || error.response.status === 401) {
+        // Rate limit, auth error, or request too large - try next key
+        if ([429, 401, 413].includes(error.response.status)) {
           console.log(
             `Key ${i + 1} failed (${error.response.status}), trying next key...`
           );
           continue;
         }
 
-        // For other API errors, throw immediately
         throw new Error(
           `Groq API error: ${error.response.status} - ${
             error.response.data?.error?.message || "Unknown error"
           }`
         );
       } else if (error.request) {
-        // Network error - try next key
         console.error(`Network error with key ${i + 1}:`, error.message);
         console.log("Trying next key...");
         continue;
       } else {
-        // Other errors - throw immediately
         console.error("Error generating README:", error.message);
         throw error;
       }
@@ -115,6 +282,68 @@ export async function generateReadme(context) {
   } else {
     throw new Error("Failed to generate README with all available API keys");
   }
+}
+
+/**
+ * Build optimized context based on AI recommendations
+ * @param {Object} context - Original context
+ * @param {Object} recommendations - AI recommendations
+ * @returns {Object} Optimized context
+ */
+function buildOptimizedContext(context, recommendations) {
+  const { selectedFiles, includeExistingReadme, truncateReadme } =
+    recommendations;
+  const { fullCodebase, changedFiles, existingReadme, ...rest } = context;
+
+  // Filter files based on AI selection
+  const selectedCodebase = [];
+  const selectedChangedFiles = [];
+
+  if (fullCodebase) {
+    fullCodebase.forEach((file) => {
+      if (selectedFiles.includes(file.path)) {
+        selectedCodebase.push(file);
+      }
+    });
+  }
+
+  if (changedFiles) {
+    changedFiles.forEach((file) => {
+      if (
+        selectedFiles.includes(file.path) &&
+        !selectedCodebase.some((f) => f.path === file.path)
+      ) {
+        selectedChangedFiles.push(file);
+      }
+    });
+  }
+
+  // Handle existing README
+  let processedReadme = null;
+  if (includeExistingReadme && existingReadme) {
+    if (truncateReadme) {
+      // Keep first 500 and last 200 lines for context
+      const lines = existingReadme.split("\n");
+      if (lines.length > 700) {
+        processedReadme = [
+          ...lines.slice(0, 500),
+          "\n... (middle sections omitted for brevity) ...\n",
+          ...lines.slice(-200),
+        ].join("\n");
+      } else {
+        processedReadme = existingReadme;
+      }
+    } else {
+      processedReadme = existingReadme;
+    }
+  }
+
+  return {
+    ...rest,
+    fullCodebase: selectedCodebase,
+    changedFiles: selectedChangedFiles,
+    existingReadme: processedReadme,
+  };
 }
 
 /**
@@ -317,11 +546,12 @@ export function analyzeReadmeDepth(existingReadme) {
 }
 
 /**
- * Build user prompt with repository context
- * @param {Object} context - Repository context
+ * Build user prompt with repository context (optimized version)
+ * @param {Object} context - Repository context (already optimized)
+ * @param {Object} recommendations - AI recommendations from first step
  * @returns {string} User prompt
  */
-function buildUserPrompt(context) {
+function buildUserPrompt(context, recommendations = {}) {
   const {
     repoName,
     repoOwner,
@@ -329,13 +559,21 @@ function buildUserPrompt(context) {
     existingReadme,
     commitDiff,
     changedFiles,
-    fullCodebase, // New: full codebase content for deep analysis
+    fullCodebase,
   } = context;
 
   // Analyze existing README depth
   const analysis = analyzeReadmeDepth(existingReadme);
 
   let prompt = "";
+
+  // Add AI selection context
+  if (recommendations.reasoning) {
+    prompt += `## FILE SELECTION\n`;
+    prompt += `*AI analyzed ${
+      recommendations.selectedFiles?.length || 0
+    } key files: ${recommendations.reasoning}*\n\n`;
+  }
 
   // Add analysis context for the AI
   prompt += `## ANALYSIS RESULT\n`;
@@ -349,15 +587,15 @@ function buildUserPrompt(context) {
   // Determine task based on strategy
   if (analysis.strategy === "full") {
     prompt += `## TASK: FULL README GENERATION\n\n`;
-    prompt += `Create a comprehensive, production-ready README.md from scratch using the FULL codebase context provided below.\n\n`;
+    prompt += `Create a comprehensive README.md using the key files selected below.\n\n`;
     prompt += `**Repository**: ${repoOwner}/${repoName}\n\n`;
   } else if (analysis.strategy === "enhance") {
     prompt += `## TASK: README ENHANCEMENT\n\n`;
-    prompt += `The existing README lacks depth. Significantly expand it using the full codebase context while preserving existing content.\n\n`;
+    prompt += `Enhance the existing README using the selected codebase context.\n\n`;
     prompt += `**Repository**: ${repoOwner}/${repoName}\n\n`;
   } else {
     prompt += `## TASK: INCREMENTAL UPDATE\n\n`;
-    prompt += `The README is comprehensive. Only update sections affected by the recent commits. Preserve everything else.\n\n`;
+    prompt += `Update only sections affected by recent commits.\n\n`;
     prompt += `**Repository**: ${repoOwner}/${repoName}\n\n`;
   }
 
@@ -366,88 +604,41 @@ function buildUserPrompt(context) {
     prompt += `## REPOSITORY STRUCTURE\n\`\`\`\n${repoStructure}\n\`\`\`\n\n`;
   }
 
-  // For full or enhance strategies, include full codebase
-  if (analysis.strategy === "full" || analysis.strategy === "enhance") {
-    if (fullCodebase && fullCodebase.length > 0) {
-      prompt += `## FULL CODEBASE ANALYSIS\n\n`;
-      prompt += `The following are the key source files for understanding this project:\n\n`;
-
-      fullCodebase.forEach((file) => {
-        const lang = getLanguageFromPath(file.path);
-        prompt += `### File: \`${file.path}\`\n`;
-        if (file.description) {
-          prompt += `*${file.description}*\n`;
-        }
-        prompt += `\`\`\`${lang}\n${file.content}\n\`\`\`\n\n`;
-      });
-    }
-
-    // Also include changed files for additional context
-    if (changedFiles && changedFiles.length > 0) {
-      prompt += `## RECENTLY CHANGED FILES\n\n`;
-      changedFiles.forEach((file) => {
-        const lang = file.language || getLanguageFromPath(file.path);
-        prompt += `### File: \`${file.path}\`\n`;
-        prompt += `\`\`\`${lang}\n${file.content}\n\`\`\`\n\n`;
-      });
-    }
-  } else {
-    // Incremental update - only show diffs and changed files
-    if (commitDiff) {
-      prompt += `## RECENT COMMIT CHANGES\n`;
-      prompt += `Analyze these changes to determine what README sections need updating:\n`;
-      prompt += `\`\`\`diff\n${commitDiff}\n\`\`\`\n\n`;
-    }
-
-    if (changedFiles && changedFiles.length > 0) {
-      prompt += `## MODIFIED FILES (Current Content)\n\n`;
-      changedFiles.forEach((file) => {
-        const lang = file.language || getLanguageFromPath(file.path);
-        prompt += `### File: \`${file.path}\`\n`;
-        prompt += `\`\`\`${lang}\n${file.content}\n\`\`\`\n\n`;
-      });
-    }
+  // Include selected codebase files
+  if (fullCodebase && fullCodebase.length > 0) {
+    prompt += `## KEY SOURCE FILES\n\n`;
+    fullCodebase.forEach((file) => {
+      const lang = getLanguageFromPath(file.path);
+      prompt += `### \`${file.path}\`\n`;
+      prompt += `\`\`\`${lang}\n${file.content}\n\`\`\`\n\n`;
+    });
   }
 
-  // Existing README (always include if exists)
+  // Include changed files
+  if (changedFiles && changedFiles.length > 0) {
+    prompt += `## CHANGED FILES\n\n`;
+    changedFiles.forEach((file) => {
+      const lang = file.language || getLanguageFromPath(file.path);
+      prompt += `### \`${file.path}\`\n`;
+      prompt += `\`\`\`${lang}\n${file.content}\n\`\`\`\n\n`;
+    });
+  }
+
+  // Commit diff for incremental updates
+  if (analysis.strategy === "incremental" && commitDiff) {
+    prompt += `## COMMIT DIFF\n`;
+    prompt += `\`\`\`diff\n${commitDiff}\n\`\`\`\n\n`;
+  }
+
+  // Existing README
   if (existingReadme) {
     prompt += `## EXISTING README\n`;
-    if (analysis.strategy === "incremental") {
-      prompt += `*This README is comprehensive. Preserve structure and only update affected sections.*\n\n`;
-    } else {
-      prompt += `*This README needs significant enhancement. Use it as a base but expand considerably.*\n\n`;
-    }
     prompt += `\`\`\`markdown\n${existingReadme}\n\`\`\`\n\n`;
   }
 
-  // Final instructions based on strategy
+  // Concise instructions
   prompt += `---\n\n## INSTRUCTIONS\n\n`;
-
-  if (analysis.strategy === "full") {
-    prompt += `Generate a **complete, production-ready README** with ALL sections from the system prompt.
-- Analyze the entire codebase to understand the project's purpose, architecture, and usage
-- Include real code examples extracted from the actual source files
-- Document all configuration options found in the code
-- Explain the project structure based on the file tree
-- Create comprehensive installation and usage guides
-- Be thorough - this is the project's primary documentation`;
-  } else if (analysis.strategy === "enhance") {
-    prompt += `**Significantly enhance** the existing README:
-- Keep all existing content that is accurate
-- Add missing sections (check against the comprehensive structure in system prompt)
-- Expand shallow sections with more detail and code examples
-- Add architecture/technical details based on codebase analysis
-- Improve code examples with real usage patterns from the source
-- Ensure installation and usage guides are complete and accurate`;
-  } else {
-    prompt += `**Incrementally update** the README:
-- ONLY modify sections directly affected by the commit changes
-- Keep all unaffected sections EXACTLY as they are
-- Update version numbers, feature lists, or API docs if changed
-- Add documentation for any new features introduced
-- Fix any documentation that the changes have made outdated
-- Do NOT restructure or rewrite sections that weren't affected`;
-  }
+  prompt += `Generate a complete, professional README.md. Include: Overview, Features, Tech Stack, Installation, Usage, API (if applicable), Contributing, License. Output ONLY the README markdown.`;
 
   return prompt;
 }
