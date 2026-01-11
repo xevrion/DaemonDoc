@@ -17,9 +17,11 @@ const Footer = () => {
         >
           {/* Logo */}
           <div className="flex items-center gap-2.5">
-            <div className="bg-slate-900 text-white p-2 rounded-lg">
-              <span className="font-bold text-base sm:text-lg leading-none">D</span>
-            </div>
+            <img 
+              src="/logo.svg" 
+              alt="DaemonDoc Logo" 
+              className="w-8 h-8 sm:w-9 sm:h-9"
+            />
             <span className="font-semibold text-lg sm:text-xl tracking-tight text-slate-900">
               DaemonDoc
             </span>

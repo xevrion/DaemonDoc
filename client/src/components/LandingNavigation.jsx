@@ -89,10 +89,12 @@ const LandingNavigation = () => {
                 transition={{ type: "spring", stiffness: 500, damping: 15 }}
                 className="relative"
               >
-                <div className="absolute inset-0 bg-slate-900 rounded-lg blur-sm opacity-20 group-hover:opacity-30 transition-opacity" />
-                <div className="relative bg-slate-900 text-white w-8 h-8 sm:w-9 sm:h-9 rounded-lg flex items-center justify-center">
-                  <span className="font-bold text-sm sm:text-base">D</span>
-                </div>
+                <div className="absolute inset-0 rounded-lg blur-sm opacity-20 group-hover:opacity-30 transition-opacity" />
+                <img 
+                  src="/logo.svg" 
+                  alt="DaemonDoc Logo" 
+                  className="relative w-8 h-8 sm:w-9 sm:h-9"
+                />
               </motion.div>
               <span className="font-semibold text-base sm:text-lg tracking-tight text-slate-900 group-hover:text-slate-700 transition-colors">
                 DaemonDoc
