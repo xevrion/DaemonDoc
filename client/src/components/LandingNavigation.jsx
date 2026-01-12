@@ -45,7 +45,7 @@ const LandingNavigation = () => {
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, ease: [0.23, 1, 0.32, 1] }}
-        className="fixed top-0 left-0 right-0 z-50 backdrop-blur-md bg-gradient-to-b from-white/30 via-white/20 to-transparent border-b border-white/20"
+        className="fixed top-0 left-0 right-0 z-50 backdrop-blur-xs bg-linear-to-t from-white/10 via-white/50 to-white/95"
       >
         
 
@@ -55,7 +55,7 @@ const LandingNavigation = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             className="flex items-center gap-3 cursor-pointer group"
-            onClick={() => navigate("/")}
+            onClick={() => scrollToSection("hero")}
           >
             <motion.div 
               whileHover={{ rotate: 8, scale: 1.05 }}
