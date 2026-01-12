@@ -155,25 +155,25 @@ const Logs = () => {
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-white text-slate-900 font-sans selection:bg-indigo-100">
         <AuthNavigation />
 
-        <div className="pt-24 pb-16 px-6">
+        <div className="pt-24 pb-16 px-4 sm:px-6">
           <div className="max-w-5xl mx-auto">
             {/* Header */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="mb-8"
+              className="mb-6 sm:mb-8"
             >
-              <div className="flex items-center justify-between mb-4">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
                 <div className="flex items-center gap-3">
-                  <div className="bg-slate-900 p-3 rounded-xl">
-                    <Activity size={24} className="text-white" />
+                  <div className="bg-slate-900 p-2 sm:p-3 rounded-xl">
+                    <Activity size={20} className="text-white sm:w-6 sm:h-6" />
                   </div>
                   <div>
-                    <h1 className="text-4xl font-bold text-slate-900">
+                    <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-900">
                       Activity Logs
                     </h1>
-                    <p className="text-slate-600 mt-1">
-                      Track all README generation and repository activities
+                    <p className="text-slate-600 mt-1 text-sm sm:text-base">
+                      Track all README generation activities
                     </p>
                   </div>
                 </div>
@@ -182,7 +182,7 @@ const Logs = () => {
                   whileTap={{ scale: 0.95 }}
                   onClick={() => fetchLogs(true)}
                   disabled={refreshing}
-                  className="bg-white border border-slate-200 text-slate-700 px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 hover:bg-slate-50 transition-all shadow-sm disabled:opacity-50"
+                  className="bg-white border border-slate-200 text-slate-700 px-3 sm:px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 hover:bg-slate-50 transition-all shadow-sm disabled:opacity-50 w-full sm:w-auto justify-center"
                 >
                   <RefreshCw
                     size={16}
@@ -193,43 +193,43 @@ const Logs = () => {
               </div>
 
               {/* Stats */}
-              <div className="flex items-center gap-4 mt-6 flex-wrap">
-                <div className="bg-white border border-slate-200 rounded-xl px-6 py-3 shadow-sm">
-                  <div className="flex items-center gap-2">
-                    <Activity size={16} className="text-slate-600" />
-                    <span className="text-2xl font-bold text-slate-900">
+              <div className="grid grid-cols-2 lg:flex lg:items-center gap-3 sm:gap-4 mt-4 sm:mt-6">
+                <div className="bg-white border border-slate-200 rounded-xl px-3 sm:px-6 py-3 shadow-sm">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+                    <Activity size={14} className="text-slate-600 sm:w-4 sm:h-4" />
+                    <span className="text-xl sm:text-2xl font-bold text-slate-900">
                       {logs.length}
                     </span>
-                    <span className="text-sm text-slate-500">
-                      Total Activities
+                    <span className="text-xs sm:text-sm text-slate-500">
+                      Total
                     </span>
                   </div>
                 </div>
-                <div className="bg-white border border-emerald-200 rounded-xl px-6 py-3 shadow-sm">
-                  <div className="flex items-center gap-2">
-                    <CheckCircle2 size={16} className="text-emerald-600" />
-                    <span className="text-2xl font-bold text-emerald-700">
+                <div className="bg-white border border-emerald-200 rounded-xl px-3 sm:px-6 py-3 shadow-sm">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+                    <CheckCircle2 size={14} className="text-emerald-600 sm:w-4 sm:h-4" />
+                    <span className="text-xl sm:text-2xl font-bold text-emerald-700">
                       {logs.filter((l) => l.status === "success").length}
                     </span>
-                    <span className="text-sm text-emerald-600">Successful</span>
+                    <span className="text-xs sm:text-sm text-emerald-600">Success</span>
                   </div>
                 </div>
-                <div className="bg-white border border-red-200 rounded-xl px-6 py-3 shadow-sm">
-                  <div className="flex items-center gap-2">
-                    <XCircle size={16} className="text-red-600" />
-                    <span className="text-2xl font-bold text-red-700">
+                <div className="bg-white border border-red-200 rounded-xl px-3 sm:px-6 py-3 shadow-sm">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+                    <XCircle size={14} className="text-red-600 sm:w-4 sm:h-4" />
+                    <span className="text-xl sm:text-2xl font-bold text-red-700">
                       {logs.filter((l) => l.status === "failed").length}
                     </span>
-                    <span className="text-sm text-red-600">Failed</span>
+                    <span className="text-xs sm:text-sm text-red-600">Failed</span>
                   </div>
                 </div>
-                <div className="bg-white border border-amber-200 rounded-xl px-6 py-3 shadow-sm">
-                  <div className="flex items-center gap-2">
-                    <Clock size={16} className="text-amber-600" />
-                    <span className="text-2xl font-bold text-amber-700">
+                <div className="bg-white border border-amber-200 rounded-xl px-3 sm:px-6 py-3 shadow-sm">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+                    <Clock size={14} className="text-amber-600 sm:w-4 sm:h-4" />
+                    <span className="text-xl sm:text-2xl font-bold text-amber-700">
                       {logs.filter((l) => l.status === "ongoing").length}
                     </span>
-                    <span className="text-sm text-amber-600">In Progress</span>
+                    <span className="text-xs sm:text-sm text-amber-600">Progress</span>
                   </div>
                 </div>
               </div>
@@ -283,43 +283,76 @@ const Logs = () => {
                   )}
                   <div className="divide-y divide-slate-200">
                     <AnimatePresence>
-                      {logs.map((log, index) => (
-                        <motion.div
-                          key={log._id}
-                          initial={{ opacity: 0, x: -20 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          exit={{ opacity: 0, x: 20 }}
-                          transition={{ delay: index * 0.03 }}
-                          className={`p-6 hover:bg-slate-50 transition-colors ${getStatusColor(
-                            log.status
-                          )}`}
-                        >
-                          <div className="flex items-start justify-between gap-4">
-                            <div className="flex items-start gap-4 flex-1">
-                              <div className="mt-1">
-                                {getStatusIcon(log.status)}
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-3 mb-2">
-                                  <h3 className="font-semibold text-slate-900">
-                                    {getActionLabel(log.action)}
-                                  </h3>
-                                  {getStatusBadge(log.status)}
+                      {logs.map((log, index) => {
+                        // Build commit URL if commitId and repoOwner exist
+                        const commitUrl =
+                          log.commitId && log.repoOwner
+                            ? `https://github.com/${log.repoOwner}/${log.repoName}/commit/${log.commitId}`
+                            : null;
+
+                        const LogCard = (
+                          <motion.div
+                            key={log._id}
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: 20 }}
+                            transition={{ delay: index * 0.03 }}
+                            className={`p-4 sm:p-6 transition-all ${getStatusColor(
+                              log.status
+                            )} ${
+                              commitUrl
+                                ? "hover:bg-slate-100 cursor-pointer hover:shadow-md active:scale-[0.99] sm:hover:scale-[1.01]"
+                                : "hover:bg-slate-50"
+                            }`}
+                          >
+                            <div className="flex items-start justify-between gap-3 sm:gap-4">
+                              <div className="flex items-start gap-3 sm:gap-4 flex-1">
+                                <div className="mt-1">
+                                  {getStatusIcon(log.status)}
                                 </div>
-                                <div className="flex items-center gap-2 text-sm text-slate-600 mb-1">
-                                  <GitBranch size={14} />
-                                  <span className="font-mono">
-                                    {log.repoName}
-                                  </span>
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-2">
+                                    <h3 className="font-semibold text-sm sm:text-base text-slate-900">
+                                      {getActionLabel(log.action)}
+                                    </h3>
+                                    {getStatusBadge(log.status)}
+                                    {commitUrl && (
+                                      <span className="text-xs text-indigo-600 font-semibold flex items-center gap-1">
+                                        View Commit →
+                                      </span>
+                                    )}
+                                  </div>
+                                  <div className="flex items-center gap-2 text-xs sm:text-sm text-slate-600 mb-1">
+                                    <GitBranch size={12} className="sm:w-3.5 sm:h-3.5" />
+                                    <span className="font-mono truncate">
+                                      {log.repoOwner
+                                        ? `${log.repoOwner}/${log.repoName}`
+                                        : log.repoName}
+                                    </span>
+                                  </div>
+                                  <p className="text-xs text-slate-500">
+                                    {formatTimestamp(log.createdAt)}
+                                  </p>
                                 </div>
-                                <p className="text-xs text-slate-500">
-                                  {formatTimestamp(log.createdAt)}
-                                </p>
                               </div>
                             </div>
-                          </div>
-                        </motion.div>
-                      ))}
+                          </motion.div>
+                        );
+
+                        return commitUrl ? (
+                          <a
+                            key={log._id}
+                            href={commitUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="block"
+                          >
+                            {LogCard}
+                          </a>
+                        ) : (
+                          LogCard
+                        );
+                      })}
                     </AnimatePresence>
                   </div>
                 </div>
