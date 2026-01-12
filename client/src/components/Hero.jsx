@@ -127,12 +127,11 @@ const Hero = () => {
         </div>
 
         {/* FOOTER: Feature Blueprint */}
-        <div className="grid md:grid-cols-3 gap-px bg-black/10 border border-black/10 rounded-2xl">
+        <div className="grid md:grid-cols-3 gap-px bg-black/10 border border-black/10 rounded-2xl overflow-hidden">
           <FeatureCard
             title="Recursive AST Analysis"
             desc="We don't use regex. We parse your actual code structure to understand dependencies."
             icon={<GitBranch size={20} />}
-            className="rounded-tl-2xl rounded-bl-2xl"
           />
           <FeatureCard
             title="Redis-Backed Context"
@@ -143,7 +142,6 @@ const Hero = () => {
             title="Zero-Configuration"
             desc="Drops into your pre-commit hooks. No dashboard needed. Just engineering."
             icon={<Terminal size={20} />}
-            className="rounded-tr-2xl rounded-br-2xl"
           />
         </div>
       </div>
@@ -169,8 +167,8 @@ const PipelineStep = ({ icon, title, children, active }) => (
   </div>
 );
 
-const FeatureCard = ({ title, desc, icon, className }) => (
-  <div className={`bg-white p-10 hover:bg-slate-50 transition-colors ${className}`}>
+const FeatureCard = ({ title, desc, icon }) => (
+  <div className={`bg-white p-10 hover:bg-slate-50 transition-colors`}>
     <div className="mb-6">{icon}</div>
     <h4 className="text-sm font-black uppercase tracking-tight mb-4">
       {title}
