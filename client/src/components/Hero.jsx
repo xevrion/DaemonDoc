@@ -35,7 +35,7 @@ const Hero = () => {
               </span>
             </div>
             <h2 className="text-sm font-mono text-slate-400 italic">
-              Project: Auto-Documentation for Arman Thakur
+              Project: AI-Powered README Generator
             </h2>
           </div>
           <div className="grid grid-cols-3 gap-8 font-mono text-[10px] uppercase font-bold tracking-tighter">

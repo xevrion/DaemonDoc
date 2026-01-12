@@ -1,21 +1,24 @@
-/* eslint-disable react-hooks/exhaustive-deps */
-import React, { useState, useEffect } from "react";
+import React, { useEffect } from "react";
 import { motion } from "framer-motion";
-import AuthNavigation from "../components/AuthNavigation";
-import { useAuth } from "../context/AuthContext";
-import RepoCard from "../components/RepoCard";
-import { Loader2, Sparkles, AlertCircle, RefreshCw, ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import SEO from "../components/SEO";
-
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
+import {
+  Github,
+  Mail,
+  MapPin,
+  Link as LinkIcon,
+  Settings,
+  Zap,
+  ShieldCheck,
+  Code2,
+  ExternalLink,
+  Calendar,
+} from "lucide-react";
+import { useAuth } from "../context/AuthContext";
+import AuthNavigation from "../components/AuthNavigation";
 
 const Profile = () => {
-  const { user, isAuthenticated, isLoading } = useAuth();
   const navigate = useNavigate();
-  const [repos, setRepos] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const { user, isAuthenticated, isLoading } = useAuth();
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -24,182 +27,175 @@ const Profile = () => {
     }
   }, [isAuthenticated, isLoading, navigate]);
 
-  useEffect(() => {
-    fetchRepos();
-  }, [user]);
-
-  const fetchRepos = async () => {
-    if (user) {
-      setLoading(true);
-      setError(null);
-      try {
-        const token = localStorage.getItem("accessToken");
-        const response = await fetch(`${BACKEND_URL}/api/github/getGithubRepos`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        
-        if (!response.ok) {
-          throw new Error("Failed to fetch repositories");
-        }
-        
-        const data = await response.json();
-        const activeRepos = (data.reposData || []).filter(repo => repo.activated);
-        setRepos(activeRepos);
-      } catch (error) {
-        console.error("Error fetching repos:", error);
-        setError(error.message);
-      } finally {
-        setLoading(false);
-      }
-    }
-  };
+  // Show loading state while checking authentication
+  if (isLoading || !user) {
+    return (
+      <div className="min-h-screen bg-[#F8FAFC] flex items-center justify-center">
+        <div className="text-slate-500">Loading...</div>
+      </div>
+    );
+  }
+  // Stats based on your real developer journey
+  const stats = [
+    { label: "Active Projects", value: "4+", icon: <Code2 size={18} /> },
+    {
+      label: "AI Updates",
+      value: "Enabled",
+      icon: <Zap size={18} className="text-emerald-500" />,
+    },
+    {
+      label: "Status",
+      value: "Pro",
+      icon: <ShieldCheck size={18} className="text-blue-500" />,
+    },
+  ];
 
   return (
-    <>
-      <SEO 
-        title="Profile - DaemonDoc | Your Account Settings"
-        description="Manage your DaemonDoc profile, view your active repositories, and configure your AI-powered documentation settings."
-        ogUrl="https://daemondoc.online/profile"
-        canonical="https://daemondoc.online/profile"
-      />
-      <div className="min-h-screen bg-linear-to-br from-emerald-50 via-white to-slate-50 text-slate-900 font-sans selection:bg-indigo-100 overflow-x-hidden">
-        <AuthNavigation />
-      
-      <div className="pt-24 pb-16 px-6">
-        <div className="max-w-7xl mx-auto">
-          {/* Header Section */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mb-8"
-          >
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <div className="flex items-center gap-3 mb-2">
-                  <div className="bg-emerald-100 p-2 rounded-lg">
-                    <Sparkles size={24} className="text-emerald-600" />
-                  </div>
-                  <h1 className="text-4xl font-bold text-slate-900">
-                    Active Repositories
-                  </h1>
+    <div className="min-h-screen bg-[#F8FAFC] text-slate-900 font-sans selection:bg-blue-50">
+      <AuthNavigation />
+      <div className="pt-32 pb-20 px-6 max-w-5xl mx-auto">
+        {/* SECTION 1: HERO HEADER */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-white/70 backdrop-blur-xl border border-slate-200 rounded-[32px] p-8 mb-8 shadow-[0_8px_30px_rgba(0,0,0,0.04)]"
+        >
+          <div className="flex flex-col md:flex-row gap-8 items-center md:items-start">
+            {/* High-Resolution Avatar */}
+            <div className="relative group">
+              <div className="absolute -inset-1 bg-gradient-to-tr from-[#2da44e] to-[#0969da] rounded-full blur opacity-20 group-hover:opacity-40 transition duration-500" />
+              <img
+                src={user.avatarUrl}
+                alt={user.githubUsername}
+                className="relative w-32 h-32 rounded-full border-4 border-white shadow-sm object-cover"
+              />
+            </div>
+
+            {/* Identity Info */}
+            <div className="flex-1 text-center md:text-left">
+              <div className="flex flex-col md:flex-row md:items-center gap-3 mb-2">
+                <h1 className="text-3xl font-[900] tracking-tighter text-slate-900">
+                  Arman Thakur
+                </h1>
+                <span className="inline-flex items-center px-3 py-1 rounded-full bg-slate-100 border border-slate-200 text-[11px] font-bold text-slate-500 uppercase tracking-widest">
+                  First-Year B.Tech CSE
+                </span>
+              </div>
+              <p className="text-lg font-medium text-slate-500 mb-6">
+                @{user.githubUsername} • Full-Stack Developer & AI Enthusiast
+              </p>
+
+              <div className="flex flex-wrap justify-center md:justify-start gap-4 text-sm text-slate-500 font-medium">
+                <span className="flex items-center gap-1.5">
+                  <MapPin size={16} /> India
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <Calendar size={16} /> Joined Jan 2026
+                </span>
+                <a
+                  href={`https://github.com/${user.githubUsername}`}
+                  target="_blank"
+                  className="flex items-center gap-1.5 text-[#0969da] hover:underline"
+                >
+                  <Github size={16} /> github.com/{user.githubUsername}
+                </a>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* SECTION 2: GRID CONTENT */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* STATS BENTO */}
+          <div className="md:col-span-2 grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {stats.map((stat, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: i * 0.1 }}
+                className="bg-white border border-slate-200 p-6 rounded-[24px] shadow-sm hover:shadow-md transition-shadow"
+              >
+                <div className="p-2 w-fit rounded-xl bg-slate-50 text-slate-400 mb-4 border border-slate-100">
+                  {stat.icon}
                 </div>
-                <p className="text-slate-600">
-                  Repositories with AI-powered README updates enabled
+                <p className="text-2xl font-black text-slate-900 leading-none mb-1">
+                  {stat.value}
+                </p>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                  {stat.label}
+                </p>
+              </motion.div>
+            ))}
+
+            {/* Auto-README Status Toggle Display */}
+            <div className="sm:col-span-3 bg-white border border-slate-200 p-8 rounded-[24px] flex items-center justify-between overflow-hidden relative">
+              <div className="relative z-10">
+                <h3 className="text-xl font-bold text-slate-900 mb-1">
+                  DaemonDoc Orchestration
+                </h3>
+                <p className="text-sm text-slate-500 font-medium max-w-sm">
+                  Your AI engine is currently{" "}
+                  {user.autoReadmeEnabled
+                    ? "automatically updating"
+                    : "paused for"}{" "}
+                  your README files.
                 </p>
               </div>
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={fetchRepos}
-                disabled={loading}
-                className="bg-white border border-slate-200 text-slate-700 px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 hover:bg-slate-50 transition-all shadow-sm disabled:opacity-50"
+              <div
+                className={`p-4 rounded-full ${
+                  user.autoReadmeEnabled
+                    ? "bg-emerald-50 text-emerald-500"
+                    : "bg-slate-50 text-slate-300"
+                }`}
               >
-                <RefreshCw size={16} className={loading ? "animate-spin" : ""} />
-                Refresh
-              </motion.button>
+                <Zap
+                  size={32}
+                  className={user.autoReadmeEnabled ? "animate-pulse" : ""}
+                  fill="currentColor"
+                />
+              </div>
+              {/* Subtle visual texture */}
+              <div className="absolute top-0 right-0 w-32 h-32 bg-slate-50 rounded-full translate-x-16 -translate-y-16" />
+            </div>
+          </div>
+
+          {/* SIDEBAR: TECH STACK */}
+          <div className="bg-white border border-slate-200 p-8 rounded-[32px] shadow-sm">
+            <h4 className="text-xs font-black uppercase tracking-widest text-slate-400 mb-6 flex items-center gap-2">
+              <Code2 size={14} /> Technology Stack
+            </h4>
+            <div className="flex flex-wrap gap-2">
+              {["MERN", "TypeScript", "Next.js", "Redis", "DevOps"].map(
+                (tech) => (
+                  <span
+                    key={tech}
+                    className="px-3 py-1.5 bg-slate-50 border border-slate-100 rounded-lg text-xs font-bold text-slate-700"
+                  >
+                    {tech}
+                  </span>
+                )
+              )}
             </div>
 
-            {/* Info Banner */}
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
-              className="bg-emerald-50 border border-emerald-200 rounded-xl p-6 mt-6"
-            >
-              <div className="flex items-start gap-4">
-                <div className="bg-emerald-100 p-2 rounded-lg shrink-0">
-                  <div className="w-5 h-5 flex items-center justify-center">
-                    <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
-                  </div>
-                </div>
-                <div className="flex-1">
-                  <h3 className="font-semibold text-emerald-900 mb-1">
-                    AI Updates Active
-                  </h3>
-                  <p className="text-sm text-emerald-700">
-                    These repositories are being monitored for changes. When you push commits,
-                    our AI will automatically analyze your code and update the README accordingly.
-                  </p>
-                </div>
-              </div>
-            </motion.div>
-          </motion.div>
+            <hr className="my-8 border-slate-100" />
 
-          {/* Content */}
-          {loading ? (
-            <div className="flex flex-col items-center justify-center py-20">
-              <Loader2 size={48} className="text-emerald-400 animate-spin mb-4" />
-              <p className="text-slate-600 font-medium">Loading active repositories...</p>
-            </div>
-          ) : error ? (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="bg-red-50 border border-red-200 rounded-xl p-8 text-center"
-            >
-              <AlertCircle size={48} className="text-red-500 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-red-900 mb-2">
-                Failed to load repositories
-              </h3>
-              <p className="text-red-700 mb-4">{error}</p>
-              <button
-                onClick={fetchRepos}
-                className="bg-red-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-red-700 transition-all"
-              >
-                Try Again
-              </button>
-            </motion.div>
-          ) : repos.length > 0 ? (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.2 }}
-              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
-            >
-              {repos.map((repo, index) => (
-                <motion.div
-                  key={repo.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.05 }}
-                >
-                  <RepoCard repo={repo} showToggle={false} />
-                </motion.div>
-              ))}
-            </motion.div>
-          ) : (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="bg-white border border-slate-200 rounded-xl p-12 text-center"
-            >
-              <div className="bg-slate-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
-                <Sparkles size={40} className="text-slate-400" />
+            <h4 className="text-xs font-black uppercase tracking-widest text-slate-400 mb-4">
+              Integrations
+            </h4>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                <div className="flex items-center gap-3">
+                  <Github size={18} />
+                  <span className="text-xs font-bold">GitHub Linked</span>
+                </div>
+                <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_#10b981]" />
               </div>
-              <h3 className="text-2xl font-bold text-slate-900 mb-3">
-                No Active Repositories Yet
-              </h3>
-              <p className="text-slate-600 mb-6 max-w-md mx-auto">
-                You haven't enabled AI updates for any repositories. Head to your repositories
-                page and toggle the switch to activate AI-powered README updates.
-              </p>
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => navigate("/home")}
-                className="bg-slate-900 text-white px-6 py-3 rounded-lg font-semibold flex items-center gap-2 hover:bg-slate-800 transition-all shadow-lg mx-auto"
-              >
-                Go to Repositories
-                <ArrowRight size={18} />
-              </motion.button>
-            </motion.div>
-          )}
+            </div>
+          </div>
         </div>
       </div>
     </div>
-    </>
   );
 };
 

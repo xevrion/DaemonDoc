@@ -49,7 +49,11 @@ const AuthNavigation = () => {
             whileHover={{ rotate: 5, scale: 1.05 }}
             transition={{ type: "spring", stiffness: 400, damping: 15 }}
           >
-            <img src="/logo.svg" alt="DaemonDoc Logo" className="w-8 h-8 sm:w-9 sm:h-9" />
+            <img
+              src="/logo.svg"
+              alt="DaemonDoc Logo"
+              className="w-8 h-8 sm:w-9 sm:h-9"
+            />
           </motion.div>
           <span className="font-semibold text-base sm:text-lg tracking-tight text-slate-900">
             DaemonDoc
@@ -158,6 +162,16 @@ const AuthNavigation = () => {
                     </div>
                   </div>
                   <button
+                    onClick={() => {
+                      navigate("/profile");
+                      setShowDropdown(false);
+                    }}
+                    className="w-full px-4 py-3 text-left text-sm font-medium text-slate-700 hover:bg-slate-50 hover:text-slate-900 transition-colors flex items-center gap-2"
+                  >
+                    <User size={15} strokeWidth={2} />
+                    Profile
+                  </button>
+                  <button
                     onClick={handleLogout}
                     className="w-full px-4 py-3 text-left text-sm font-medium text-slate-700 hover:bg-slate-50 hover:text-slate-900 transition-colors flex items-center gap-2"
                   >
@@ -209,8 +223,8 @@ const AuthNavigation = () => {
                     : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
                 }`}
               >
-                <FileText size={18} strokeWidth={2} />
-                <span>Active Repos</span>
+                <User size={18} strokeWidth={2} />
+                <span>Profile</span>
               </motion.button>
               <motion.button
                 whileTap={{ scale: 0.98 }}
