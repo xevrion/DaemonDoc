@@ -1,148 +1,133 @@
 import React from "react";
 import { motion } from "framer-motion";
-import {
-  Github,
-  ArrowRight,
-  FileText,
-  Cpu,
-  Sparkles,
-} from "lucide-react";
+import { Github, Terminal, ChevronRight, Code2, Cpu, FileText, GitBranch, Share2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 const Hero = () => {
-  const navigate = useNavigate();
-  
+  const navigate = useNavigate()
   return (
-    <section className="pt-32 sm:pt-40 md:pt-48 pb-20 sm:pb-28 md:pb-32 px-4 sm:px-6 bg-white overflow-hidden">
-      <div className="max-w-5xl mx-auto">
-        {/* Main headline */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-          className="text-center mb-6 sm:mb-8"
-        >
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.5, delay: 0.1 }}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-slate-100 rounded-full mb-6 sm:mb-8"
-          >
-            <Sparkles size={16} className="text-slate-700" />
-            <span className="text-xs sm:text-sm font-medium text-slate-700">
-              AI-Powered Documentation
-            </span>
-          </motion.div>
-          
-          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-bold tracking-tight text-slate-900 mb-6 sm:mb-8 leading-[1.1] px-4">
-            Your README,
-            <br />
-            <span className="text-slate-900 bg-linear-to-r from-slate-900 to-slate-700 bg-clip-text">
-              on Autopilot.
-            </span>
-          </h1>
-        </motion.div>
+    <section className="relative min-h-screen bg-white text-black selection:bg-black selection:text-white font-sans pt-24">
+      {/* The Background: Architectural Grid with Coordinates */}
+      <div className="absolute inset-0 z-0 opacity-[0.03] pointer-events-none" 
+           style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M100 100H0V0h100v100zM50 0v100M0 50h100' fill='none' stroke='%23000' stroke-width='1'/%3E%3C/svg%3E")` }} 
+      />
+      
+      <div className="max-w-[1400px] mx-auto px-10 relative z-10">
+        
+        {/* HEADER: System Metadata (Density Fix) */}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-end border-b border-black/10 pb-8 mb-12 gap-6">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 bg-black animate-pulse" />
+              <span className="font-mono text-[10px] font-bold uppercase tracking-[0.3em]">DaemonDoc_Sys_Link</span>
+            </div>
+            <h2 className="text-sm font-mono text-slate-400 italic">Project: Auto-Documentation for Arman Thakur</h2>
+          </div>
+          <div className="grid grid-cols-3 gap-8 font-mono text-[10px] uppercase font-bold tracking-tighter">
+            <div><p className="text-slate-400 mb-1">Engine</p><p>v0.4.2_AST</p></div>
+            <div><p className="text-slate-400 mb-1">Latency</p><p>842ms</p></div>
+            <div><p className="text-slate-400 mb-1">Uptime</p><p>99.98%</p></div>
+          </div>
+        </div>
 
-        {/* Subtext */}
-        <motion.p
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
-          className="text-base sm:text-lg md:text-xl lg:text-2xl text-slate-600 mb-10 sm:mb-12 max-w-3xl mx-auto leading-relaxed text-center font-light px-4"
-        >
-          Stop wasting hours on boilerplate. DaemonDoc analyzes your code and commits to keep documentation as fresh as your codebase.
-        </motion.p>
-
-        {/* CTA */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
-          className="flex justify-center mb-16 sm:mb-20 md:mb-24 px-4"
-        >
-          <motion.button
-            onClick={() => navigate("/login")}
-            whileHover={{ scale: 1.02, y: -2 }}
-            whileTap={{ scale: 0.98 }}
-            className="bg-slate-900 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-xl font-semibold text-base sm:text-lg flex items-center gap-2 sm:gap-3 hover:bg-slate-800 transition-all shadow-lg hover:shadow-xl group w-full sm:w-auto justify-center"
-          >
-            <Github size={20} className="sm:hidden" />
-            <Github size={22} className="hidden sm:block" />
-            <span>Connect GitHub</span>
-            <motion.div
-              className="overflow-hidden hidden sm:block"
-              initial={{ width: 0 }}
-              whileHover={{ width: "auto" }}
+        {/* HERO CONTENT: Brutalist Typography */}
+        <div className="grid lg:grid-cols-[1.1fr_0.9fr] gap-20 mb-24">
+          <div className="max-w-4xl">
+            <motion.h1 
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="text-[clamp(3.5rem,10vw,9rem)] leading-[0.82] font-[1000] tracking-[-0.06em] uppercase mb-12"
             >
-              <ArrowRight
-                size={20}
-                className="group-hover:translate-x-0 -translate-x-1 transition-transform"
-              />
-            </motion.div>
-          </motion.button>
-        </motion.div>
+              Ship logic. <br />
+              <span className="text-slate-200">Docs follow.</span>
+            </motion.h1>
 
-        {/* Visual Flow - Minimal and clean */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.4, ease: [0.22, 1, 0.36, 1] }}
-          className="flex items-center justify-center gap-4 sm:gap-6 md:gap-8 lg:gap-16 px-4"
-        >
-          {[
-            { icon: Github, label: "Repository", color: "slate" },
-            { icon: Cpu, label: "Analysis", color: "slate", primary: true },
-            { icon: FileText, label: "README.md", color: "slate" },
-          ].map((item, idx, arr) => (
-            <React.Fragment key={idx}>
-              <motion.div
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ 
-                  duration: 0.5, 
-                  delay: 0.5 + idx * 0.15,
-                  ease: [0.22, 1, 0.36, 1]
-                }}
-                className="flex flex-col items-center gap-2 sm:gap-3 md:gap-4"
-              >
-                <motion.div
-                  whileHover={{ y: -4, scale: 1.05 }}
-                  transition={{ type: "spring", stiffness: 400, damping: 17 }}
-                  className={`w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 rounded-xl sm:rounded-2xl border-2 flex items-center justify-center transition-all ${
-                    item.primary
-                      ? "bg-slate-900 border-slate-900 text-white shadow-lg"
-                      : "bg-white border-slate-200 text-slate-700 hover:border-slate-300"
-                  }`}
-                >
-                  <item.icon size={24} strokeWidth={1.5} className="sm:hidden" />
-                  <item.icon size={28} strokeWidth={1.5} className="hidden sm:block md:hidden" />
-                  <item.icon size={32} strokeWidth={1.5} className="hidden md:block" />
-                </motion.div>
-                <span className="text-xs sm:text-sm font-medium text-slate-500 tracking-wide text-center">
-                  {item.label}
-                </span>
-              </motion.div>
-              {idx < arr.length - 1 && (
-                <motion.div
-                  initial={{ scaleX: 0, opacity: 0 }}
-                  animate={{ scaleX: 1, opacity: 1 }}
-                  transition={{ 
-                    duration: 0.6, 
-                    delay: 0.7 + idx * 0.15,
-                    ease: [0.22, 1, 0.36, 1]
-                  }}
-                  className="hidden sm:block"
-                  style={{ originX: 0 }}
-                >
-                  <div className="w-8 md:w-12 h-[2px] bg-slate-200" />
-                </motion.div>
-              )}
-            </React.Fragment>
-          ))}
-        </motion.div>
+            <div className="flex flex-wrap gap-4">
+              <button onClick={()=>navigate("/login")} className="bg-black text-white px-8 py-5 rounded-none font-black text-xs uppercase flex items-center gap-4 hover:bg-slate-800 transition-all border border-black group">
+                <Github size={18} />
+                <span>Initialize Git Hook</span>
+                <ChevronRight size={16} className="group-hover:translate-x-1 transition-transform" />
+              </button>
+              <div className="px-8 py-5 border border-black/20 font-mono text-xs font-bold flex items-center gap-3 bg-slate-50">
+                <Terminal size={18} className="text-slate-400" />
+                <span>npx daemondoc@latest</span>
+              </div>
+            </div>
+          </div>
+
+          {/* THE VISUAL: The "Vertical Pipeline" (Real Engineering) */}
+          <div className="relative border-l border-black/10 pl-12 py-4 hidden lg:block">
+            <div className="space-y-16 relative">
+              {/* Step 1: Code Input */}
+              <PipelineStep icon={<Code2 size={20}/>} title="Source Extraction" active>
+                <div className="font-mono text-[11px] text-slate-500 space-y-1 mt-4">
+                  <p>&gt; Scanning ./src/dns-server.ts</p>
+                  <p>&gt; Extracting AST nodes (Function: resolveQuery)</p>
+                </div>
+              </PipelineStep>
+
+              {/* Step 2: AI Comprehension */}
+              <PipelineStep icon={<Cpu size={20}/>} title="Logic Synthesis">
+                <div className="mt-4 flex gap-2">
+                  <div className="px-2 py-1 bg-black text-white text-[9px] font-black uppercase">Redis_Cache</div>
+                  <div className="px-2 py-1 bg-slate-100 text-slate-500 text-[9px] font-black uppercase">Recursive_DNS</div>
+                </div>
+              </PipelineStep>
+
+              {/* Step 3: Markdown Generation */}
+              <PipelineStep icon={<FileText size={20}/>} title="README Sync">
+                <div className="mt-4 border-t border-black/10 pt-4">
+                  <div className="h-2 w-full bg-slate-100 mb-2" />
+                  <div className="h-2 w-2/3 bg-slate-100" />
+                </div>
+              </PipelineStep>
+
+              {/* Connecting Line */}
+              <div className="absolute top-0 left-[-49px] bottom-0 w-[1px] bg-black/10 z-0" />
+            </div>
+          </div>
+        </div>
+
+        {/* FOOTER: Feature Blueprint */}
+        <div className="grid md:grid-cols-3 gap-px bg-black/10 border border-black/10">
+          <FeatureCard 
+            title="Recursive AST Analysis" 
+            desc="We don't use regex. We parse your actual code structure to understand dependencies."
+            icon={<GitBranch size={20}/>}
+          />
+          <FeatureCard 
+            title="Redis-Backed Context" 
+            desc="Instant documentation updates powered by high-speed state management."
+            icon={<Share2 size={20}/>}
+          />
+          <FeatureCard 
+            title="Zero-Configuration" 
+            desc="Drops into your pre-commit hooks. No dashboard needed. Just engineering."
+            icon={<Terminal size={20}/>}
+          />
+        </div>
       </div>
     </section>
   );
 };
+
+// Internal Components for Precision
+const PipelineStep = ({ icon, title, children, active }) => (
+  <div className="relative z-10">
+    <div className={`absolute left-[-60px] top-0 w-6 h-6 rounded-full border border-black flex items-center justify-center bg-white ${active ? 'border-black' : 'border-slate-200'}`}>
+      {React.cloneElement(icon, { size: 12, className: active ? 'text-black' : 'text-slate-300' })}
+    </div>
+    <h3 className="text-xs font-black uppercase tracking-widest">{title}</h3>
+    {children}
+  </div>
+);
+
+const FeatureCard = ({ title, desc, icon }) => (
+  <div className="bg-white p-10 hover:bg-slate-50 transition-colors">
+    <div className="mb-6">{icon}</div>
+    <h4 className="text-sm font-black uppercase tracking-tight mb-4">{title}</h4>
+    <p className="text-xs text-slate-500 leading-relaxed font-medium">{desc}</p>
+  </div>
+);
 
 export default Hero;

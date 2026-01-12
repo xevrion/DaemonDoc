@@ -1,6 +1,6 @@
 import React from "react";
-import { motion, useScroll, useMotionValueEvent } from "framer-motion";
-import { Github, Menu, X } from "lucide-react";
+import { motion, useScroll, useMotionValueEvent, AnimatePresence } from "framer-motion";
+import { Github, Menu, X, Terminal, Cpu } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 const LandingNavigation = () => {
@@ -11,25 +11,17 @@ const LandingNavigation = () => {
   const { scrollY } = useScroll();
   const lastScrollY = React.useRef(0);
 
-  // Dynamic navbar behavior - hide on scroll down, show on scroll up
   useMotionValueEvent(scrollY, "change", (latest) => {
     const previous = lastScrollY.current;
-    
-    // Add blur/translucency after scrolling
-    if (latest > 20) {
-      setHasScrolled(true);
-    } else {
-      setHasScrolled(false);
-    }
+    setHasScrolled(latest > 20);
 
-    // Hide/show logic
+    // Hide on scroll down, show on scroll up
     if (latest > previous && latest > 150) {
       setIsVisible(false);
-      setMobileMenuOpen(false); // Close mobile menu on scroll down
+      setMobileMenuOpen(false);
     } else {
       setIsVisible(true);
     }
-    
     lastScrollY.current = latest;
   });
 
@@ -37,183 +29,134 @@ const LandingNavigation = () => {
     setMobileMenuOpen(false);
     const element = document.getElementById(sectionId);
     if (element) {
-      const offset = 100;
-      const elementPosition = element.getBoundingClientRect().top;
-      const offsetPosition = elementPosition + window.pageYOffset - offset;
+      const offset = 80;
+      const bodyRect = document.body.getBoundingClientRect().top;
+      const elementRect = element.getBoundingClientRect().top;
+      const elementPosition = elementRect - bodyRect;
+      const offsetPosition = elementPosition - offset;
 
-      window.scrollTo({
-        top: offsetPosition,
-        behavior: "smooth"
-      });
+      window.scrollTo({ top: offsetPosition, behavior: "smooth" });
     }
   };
 
   return (
     <>
       <motion.nav
-        initial={{ y: 0, opacity: 1 }}
-        animate={{ 
-          y: isVisible ? 0 : -120,
-          opacity: isVisible ? 1 : 0
-        }}
-        transition={{ 
-          duration: 0.4, 
-          ease: [0.25, 0.46, 0.45, 0.94]
-        }}
-        className={`fixed top-3 sm:top-6 left-1/2 -translate-x-1/2 z-50 transition-all duration-500 ease-out ${
+        initial={{ y: 0 }}
+        animate={{ y: isVisible ? 0 : -100 }}
+        transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
           hasScrolled 
-            ? "w-[calc(100%-1.5rem)] sm:w-[calc(100%-3rem)] max-w-5xl" 
-            : "w-[calc(100%-1.5rem)] sm:w-[calc(100%-3rem)] max-w-6xl"
+            ? "bg-white/80 backdrop-blur-md border-b border-slate-200/60 shadow-sm" 
+            : "bg-white border-b border-transparent"
         }`}
       >
-        <div 
-          className={`
-            relative overflow-hidden rounded-xl sm:rounded-2xl border transition-all duration-500
-            ${hasScrolled 
-              ? "bg-white/80 backdrop-blur-2xl border-slate-200/60 shadow-lg shadow-slate-900/5" 
-              : "bg-white/95 backdrop-blur-sm border-slate-200/40 shadow-sm"
-            }
-          `}
-        >
-          <div className="px-4 sm:px-6 md:px-8 h-14 sm:h-16 flex items-center justify-between">
-            {/* Logo */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.1 }}
-              className="flex items-center gap-2 sm:gap-3 cursor-pointer group"
-              onClick={() => navigate("/")}
-            >
-              <motion.div 
-                whileHover={{ rotate: 8, scale: 1.05 }}
-                transition={{ type: "spring", stiffness: 500, damping: 15 }}
-                className="relative"
-              >
-                <div className="absolute inset-0 rounded-lg blur-sm opacity-20 group-hover:opacity-30 transition-opacity" />
-                <img 
-                  src="/logo.svg" 
-                  alt="DaemonDoc Logo" 
-                  className="relative w-8 h-8 sm:w-9 sm:h-9"
-                />
-              </motion.div>
-              <span className="font-semibold text-base sm:text-lg tracking-tight text-slate-900 group-hover:text-slate-700 transition-colors">
-                DaemonDoc
-              </span>
-            </motion.div>
+        
 
-            {/* Desktop Navigation */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.2 }}
-              className="hidden md:flex items-center gap-1"
+        <div className="max-w-[1440px] mx-auto px-6 h-16 sm:h-20 flex items-center justify-between">
+          {/* Logo - Kept exactly as you provided */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="flex items-center gap-3 cursor-pointer group"
+            onClick={() => navigate("/")}
+          >
+            <motion.div 
+              whileHover={{ rotate: 8, scale: 1.05 }}
+              transition={{ type: "spring", stiffness: 500, damping: 15 }}
+              className="relative"
             >
-              {/* Navigation Links */}
-              <div className="flex items-center gap-1 mr-2">
-                {[
-                  { label: "How it works", id: "how-it-works" },
-                  { label: "Features", id: "features" },
-                  { label: "Security", id: "security" }
-                ].map((item) => (
-                  <motion.button
-                    key={item.id}
-                    onClick={() => scrollToSection(item.id)}
-                    whileHover={{ backgroundColor: "rgb(248 250 252)" }}
-                    whileTap={{ scale: 0.97 }}
-                    className="px-4 py-2 rounded-lg text-sm font-medium text-slate-600 hover:text-slate-900 transition-all relative group"
-                  >
-                    {item.label}
-                  </motion.button>
-                ))}
-              </div>
-
-              {/* CTA Button */}
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={() => navigate("/login")}
-                className="relative overflow-hidden bg-slate-900 text-white pl-4 pr-5 py-2.5 rounded-lg text-sm font-semibold flex items-center gap-2 transition-all group"
-              >
-              <motion.div
-                className="absolute inset-0 bg-linear-to-r from-slate-800 to-slate-900"
-                initial={{ x: "-100%" }}
-                whileHover={{ x: 0 }}
-                transition={{ duration: 0.3 }}
+              <div className="absolute inset-0  rounded-lg blur-sm opacity-20 group-hover:opacity-30 transition-opacity" />
+              <img 
+                src="/logo.svg" 
+                alt="DaemonDoc Logo" 
+                className="relative w-8 h-8 sm:w-9 sm:h-9"
               />
-                <Github size={15} strokeWidth={2} className="relative z-10" />
-                <span className="relative z-10">Connect GitHub</span>
-              </motion.button>
             </motion.div>
+            <span className="font-black text-lg sm:text-xl tracking-tighter text-slate-900">
+              DAEMONDOC
+            </span>
+          </motion.div>
 
-            {/* Mobile Menu Button */}
-            <motion.button
-              whileTap={{ scale: 0.95 }}
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden p-2 rounded-lg hover:bg-slate-100 transition-colors"
-            >
-              {mobileMenuOpen ? (
-                <X size={20} className="text-slate-900" />
-              ) : (
-                <Menu size={20} className="text-slate-900" />
-              )}
-            </motion.button>
-          </div>
-        </div>
-      </motion.nav>
-
-      {/* Mobile Menu */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ 
-          opacity: mobileMenuOpen ? 1 : 0,
-          y: mobileMenuOpen ? 0 : -20,
-          pointerEvents: mobileMenuOpen ? "auto" : "none"
-        }}
-        transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-        className="fixed top-18 sm:top-22 left-1/2 -translate-x-1/2 z-40 w-[calc(100%-1.5rem)] sm:w-[calc(100%-3rem)] max-w-md md:hidden"
-      >
-        <div className="bg-white/95 backdrop-blur-2xl border border-slate-200/60 rounded-xl shadow-lg overflow-hidden">
-          <div className="p-4 space-y-2">
+          {/* Desktop Navigation - High Density */}
+          <div className="hidden md:flex items-center gap-10">
             {[
-              { label: "How it works", id: "how-it-works" },
-              { label: "Features", id: "features" },
+              { label: "Logic", id: "how-it-works" },
+              { label: "Engine", id: "features" },
               { label: "Security", id: "security" }
             ].map((item) => (
               <button
                 key={item.id}
                 onClick={() => scrollToSection(item.id)}
-                className="w-full text-left px-4 py-3 rounded-lg text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition-all"
+                className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-400 hover:text-slate-900 transition-colors relative group"
               >
                 {item.label}
+                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-slate-900 transition-all group-hover:w-full" />
               </button>
             ))}
-            <button
-              onClick={() => {
-                setMobileMenuOpen(false);
-                navigate("/login");
-              }}
-              className="w-full bg-slate-900 text-white px-4 py-3 rounded-lg text-sm font-semibold flex items-center justify-center gap-2 hover:bg-slate-800 transition-all mt-2"
+          </div>
+
+          {/* CTA Area */}
+          <div className="flex items-center gap-4">
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => navigate("/login")}
+              className="hidden sm:flex items-center gap-2.5 px-6 py-2.5 bg-slate-900 text-white rounded-lg text-xs font-black uppercase tracking-widest hover:bg-slate-800 transition-all shadow-lg shadow-slate-900/10"
             >
-              <Github size={16} />
-              Connect GitHub
+              <Github size={14} strokeWidth={3} />
+              <span>Auth Git</span>
+            </motion.button>
+
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="md:hidden p-2 rounded-lg hover:bg-slate-100 transition-colors"
+            >
+              {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
             </button>
           </div>
         </div>
-      </motion.div>
+      </motion.nav>
 
-      {/* Mobile Menu Overlay */}
-      {mobileMenuOpen && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          onClick={() => setMobileMenuOpen(false)}
-          className="fixed inset-0 bg-slate-900/20 backdrop-blur-sm z-30 md:hidden"
-        />
-      )}
+      {/* Mobile Sidebar - Better than a floating menu */}
+      <AnimatePresence>
+        {mobileMenuOpen && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setMobileMenuOpen(false)}
+              className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-40 md:hidden"
+            />
+            <motion.div
+              initial={{ x: "100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "100%" }}
+              transition={{ type: "spring", damping: 25, stiffness: 200 }}
+              className="fixed right-0 top-0 bottom-0 w-3/4 max-w-xs bg-white z-50 md:hidden p-8 flex flex-col"
+            >
+              <div className="flex justify-between items-center mb-12">
+                <span className="font-black text-xl tracking-tighter">DAEMONDOC</span>
+                <X onClick={() => setMobileMenuOpen(false)} className="cursor-pointer" />
+              </div>
+              <div className="space-y-6 flex-1">
+                {["Logic", "Engine", "Security"].map((label) => (
+                  <button key={label} className="block text-2xl font-black tracking-tighter text-slate-900">
+                    {label}
+                  </button>
+                ))}
+              </div>
+              <button className="w-full bg-slate-900 text-white py-4 rounded-xl font-black uppercase tracking-widest text-xs flex items-center justify-center gap-3">
+                <Github size={18} />
+                Connect GitHub
+              </button>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </>
   );
 };
 
 export default LandingNavigation;
-
