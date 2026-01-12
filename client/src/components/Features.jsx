@@ -141,9 +141,6 @@ const Features = () => {
                All features strictly adherent to AST_Spec 2026.1
              </span>
           </div>
-          <button className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 hover:text-slate-900 transition-colors flex items-center gap-2">
-             Explore technical documentation <ChevronRight size={12} />
-          </button>
         </div>
       </div>
     </section>
