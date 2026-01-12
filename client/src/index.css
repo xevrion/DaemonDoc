@@ -18,26 +18,7 @@ body {
   position: relative;
 }
 
-/* Prevent layout shifts and optimize performance */
-* {
-  box-sizing: border-box;
-}
 
-/* GPU acceleration for smoother animations */
-.animate-pulse,
-[class*="animate-"],
-[class*="transition-"] {
-  will-change: transform, opacity;
-  transform: translateZ(0);
-  backface-visibility: hidden;
-  perspective: 1000px;
-}
-
-/* Optimize scroll performance */
-body {
-  overflow-y: scroll;
-  -webkit-overflow-scrolling: touch;
-}
 
 /* Prevent horizontal scroll on mobile */
 #root {
