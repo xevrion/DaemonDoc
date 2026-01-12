@@ -211,21 +211,7 @@ const AuthNavigation = () => {
                 <Home size={18} strokeWidth={2} />
                 <span>Repositories</span>
               </motion.button>
-              <motion.button
-                whileTap={{ scale: 0.98 }}
-                onClick={() => {
-                  navigate("/profile");
-                  setShowMobileMenu(false);
-                }}
-                className={`w-full px-4 py-3 rounded-lg text-sm font-medium transition-all flex items-center gap-3 ${
-                  location.pathname === "/profile"
-                    ? "bg-slate-100 text-slate-900"
-                    : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
-                }`}
-              >
-                <User size={18} strokeWidth={2} />
-                <span>Profile</span>
-              </motion.button>
+             
               <motion.button
                 whileTap={{ scale: 0.98 }}
                 onClick={() => {
