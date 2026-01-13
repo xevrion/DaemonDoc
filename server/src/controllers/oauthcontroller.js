@@ -3,6 +3,7 @@ import jwt from "jsonwebtoken";
 import User from "../schema/user.schema.js";
 import crypto from "node:crypto";
 import ActiveRepo from "../schema/activeRepo.js";
+import UserLogModel from "../schema/userLog.schema.js";
 
 const ALGORITHM = "aes-256-gcm";
 const KEY = Buffer.from(process.env.GITHUB_TOKEN_SECRET, "hex");
@@ -190,6 +191,7 @@ export const deleteAccount = async (req, res) => {
       }
     }
     await User.deleteOne({ _id: userId });
+    await UserLogModel.deleteMany({userId});
     await ActiveRepo.deleteMany({ userId });
     return res.status(200).json({ message: "Account deleted successfully" });
   } catch (error) {
