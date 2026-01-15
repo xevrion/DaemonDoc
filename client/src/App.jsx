@@ -6,6 +6,7 @@ import Landing from "./pages/Landing";
 import Home from "./pages/Home";
 import Profile from "./pages/Profile";
 import Logs from "./pages/Logs";
+import { Analytics } from "@vercel/analytics/next"
 
 const App = () => {
   return (
@@ -18,6 +19,7 @@ const App = () => {
         <Route path="/profile" element={<Profile />} />
         <Route path="/logs" element={<Logs />} />
       </Routes>
+      <Analytics />
     </div>
   );
 };
