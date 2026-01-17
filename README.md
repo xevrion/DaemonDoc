@@ -9,7 +9,6 @@
 **Transform your GitHub repositories with AI-generated, always up-to-date documentation**
 
 [Features](#-features) • [Demo](#-demo) • [Installation](#-installation) • [Tech Stack](#-tech-stack) • [API Docs](#-api-documentation) • [Deployment](#-deployment)
-
 </div>
 
 ---
